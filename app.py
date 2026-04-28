@@ -21,81 +21,55 @@ for key in [
 st.markdown("""
 <style>
 
-/* ===== BASE (LIGHT MODE DEFAULT) ===== */
-:root {
-    --bg-main: #F9FBFD;
-    --text-main: #111;
-
-    --card-activity: #EAF4FF;
-    --card-sleep: #F3E8FF;
-    --card-lifestyle: #E8F8F1;
-    --card-nutrition: #FFF4E6;
-    --card-reflection: #FFF9DB;
-}
-
-/* ===== DARK MODE ===== */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-main: #0E1117;
-        --text-main: #E6EDF3;
-
-        --card-activity: #1E2A38;
-        --card-sleep: #2A1E38;
-        --card-lifestyle: #1E3830;
-        --card-nutrition: #3A2E1E;
-        --card-reflection: #3A381E;
-    }
-}
-
-/* ===== APPLY GLOBAL ===== */
+/* ===== LIGHT MODE ===== */
 .stApp {
-    background-color: var(--bg-main);
-    color: var(--text-main);
+    background-color: #F9FBFD;
+    color: #111;
 }
 
-/* ===== CARDS ===== */
+/* Section cards (light) */
+.activity { background:#EAF4FF; }
+.sleep { background:#F3E8FF; }
+.lifestyle { background:#E8F8F1; }
+.nutrition { background:#FFF4E6; }
+.reflection { background:#FFF9DB; }
+
+/* ===== DARK MODE (Streamlit specific) ===== */
+[data-theme="dark"] .stApp {
+    background-color: #0E1117;
+    color: #E6EDF3;
+}
+
+[data-theme="dark"] .activity { background:#1E2A38; }
+[data-theme="dark"] .sleep { background:#2A1E38; }
+[data-theme="dark"] .lifestyle { background:#1E3830; }
+[data-theme="dark"] .nutrition { background:#3A2E1E; }
+[data-theme="dark"] .reflection { background:#3A381E; }
+
+/* ===== COMMON ===== */
 .section-card {
     border-radius:14px;
     padding:14px;
     margin-bottom:12px;
     border:1px solid rgba(255,255,255,0.05);
-    color: var(--text-main);
 }
 
-/* Section colors */
-.activity { background: var(--card-activity); }
-.sleep { background: var(--card-sleep); }
-.lifestyle { background: var(--card-lifestyle); }
-.nutrition { background: var(--card-nutrition); }
-.reflection { background: var(--card-reflection); }
-
-/* ===== INPUT FIXES ===== */
-input, textarea, select {
-    color: var(--text-main) !important;
-    background-color: transparent !important;
+/* Inputs */
+input, textarea {
+    color: inherit !important;
 }
 
 /* Labels */
 label {
-    color: var(--text-main) !important;
+    color: inherit !important;
 }
 
 /* Metrics */
 [data-testid="stMetricValue"] {
-    color: var(--text-main) !important;
+    color: inherit !important;
 }
 
-/* Expander */
-.st-expander {
-    color: var(--text-main);
-}
-
-/* Alerts */
-.stAlert {
-    color: var(--text-main);
-}
-
-/* ===== CLEAN UI ===== */
+/* Clean UI */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
