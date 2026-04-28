@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime, timedelta, time
+from zoneinfo import ZoneInfo   
 import uuid
 import random
 
@@ -76,8 +77,16 @@ with tab1:
             "Lunch","Dinner","Junk","Gratitude"
         ])
 
-    date = st.date_input("📅 Date", datetime.today())
-    date_str = str(date)
+
+    today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+
+date = st.date_input(
+    "📅 Date",
+    value=today,
+    max_value=today
+)
+
+date_str = str(date)
 
     # ---- CHILD ----
     with st.expander("👤 God's Favvv Child"):
