@@ -94,7 +94,7 @@ with tab1:
 
     # ================= ACTIVITY =================
     st.markdown('<div class="section-card activity">', unsafe_allow_html=True)
-    with st.expander("👣 Stepsssss"):
+    with st.expander("👣 ಹೆಜ್ಜೆ"):
 
         col1, col2, col3 = st.columns([2,2,1])
 
