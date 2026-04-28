@@ -7,6 +7,30 @@ import random
 
 st.set_page_config(page_title="Daily Tracker", layout="centered")
 
+
+st.set_page_config(page_title="Daily Tracker", layout="centered")
+
+# ---- HIDE STREAMLIT BRANDING ----
+st.markdown("""
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+footer:after {
+    content:'';
+    display:none;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ---- SESSION STATE ----
+for key in [
+    "expand_activity","expand_sleep","expand_lifestyle",
+    "expand_food","expand_reflection",
+    "show_data","submitted"
+]:
+
 # ---- SESSION STATE ----
 for key in [
     "expand_activity","expand_sleep","expand_lifestyle",
@@ -78,11 +102,6 @@ label {
 footer {visibility: hidden;}
 header {visibility: hidden;}
 
-/* Extra: remove bottom space */
-footer:after {
-    content:'';
-    display:none;
-}
 
 
 
