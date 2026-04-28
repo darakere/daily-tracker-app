@@ -4,233 +4,262 @@ import os
 from datetime import datetime, timedelta, time
 import uuid
 import matplotlib.pyplot as plt
+import random
 
-st.set_page_config(page_title="Daily Tracker", layout="wide")
+st.set_page_config(page_title="Daily Tracker", layout="centered")
+
+# ---- SESSION STATE ----
+for key in [
+    "expand_activity","expand_sleep","expand_lifestyle",
+    "expand_food","expand_reflection","show_data",
+    "show_trends","submitted"
+]:
+    if key not in st.session_state:
+        st.session_state[key] = False
+
+# ---- SCROLL ----
+def scroll_to(section_id):
+    st.markdown(f"""
+        <script>
+        var el = window.parent.document.getElementById("{section_id}");
+        if (el) {{
+            el.scrollIntoView({{ behavior: "smooth" }});
+        }}
+        </script>
+    """, unsafe_allow_html=True)
+
+# ---- THEME ----
+st.markdown("""
+<style>
+.stApp { background:#F9FBFD; }
+.section-card { border-radius:14px; padding:14px; margin-bottom:12px; border:1px solid rgba(0,0,0,0.04);}
+.activity { background:#EAF4FF;}
+.sleep { background:#F3E8FF;}
+.lifestyle { background:#E8F8F1;}
+.nutrition { background:#FFF4E6;}
+.reflection { background:#FFF9DB;}
+</style>
+""", unsafe_allow_html=True)
 
 st.title("📋 Daily Tracker")
 
-FILE = "sheet1.csv"
+FILE="sheet1.csv"
 
-# ---- LOAD DATA ----
+# ---- LOAD ----
 if os.path.exists(FILE):
-    df = pd.read_csv(FILE)
+    df=pd.read_csv(FILE)
 else:
-    df = pd.DataFrame(columns=[
-        "ID", "Date", "Name", "Step Count", "Fine", "Reason",
-        "Sleep From", "Sleep To", "Sleep Hours",
-        "Water", "Screen Time", "Lunch", "Dinner",
-        "Junk Eaten", "Gratitude"
+    df=pd.DataFrame(columns=[
+        "ID","Date","Name","Step Count","Date Fund","Motivation",
+        "Sleep From","Sleep To","Sleep Hours",
+        "Water","Screen Time","Care",
+        "Lunch","Dinner","Junk","Gratitude"
     ])
 
-# ---- INPUTS ----
-col1, col2 = st.columns(2)
+date=st.date_input("📅 Date", datetime.today())
+date_str=str(date)
 
-with col1:
-    date = st.date_input("📅 Date", datetime.today())
+today=df[df["Date"]==date_str]
+d_steps,u_steps=None,None
 
-with col2:
-    name = st.selectbox("👤 User", ["D", "U"])
+for _,r in today.iterrows():
+    if r["Name"]=="D": d_steps=r["Step Count"]
+    if r["Name"]=="U": u_steps=r["Step Count"]
 
-date_str = str(date)
+# ---- CHILD ----
+with st.expander("👤 Child"):
+    name=st.selectbox("Select Child",["D","U"])
 
-# ---- GET TODAY DATA ----
-today_entries = df[df["Date"] == date_str]
+# ---- ACTIVITY ----
+st.markdown('<div id="activity"></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-card activity">', unsafe_allow_html=True)
 
-d_steps = None
-u_steps = None
+with st.expander("👣 Activity",expanded=st.session_state.expand_activity):
 
-for _, row in today_entries.iterrows():
-    if row["Name"] == "D":
-        d_steps = row["Step Count"]
-    elif row["Name"] == "U":
-        u_steps = row["Step Count"]
+    col1,col2,col3=st.columns([2,2,1])
 
-# ---- STEP + REASON + FINE ----
-col1, col2, col3 = st.columns([2, 2, 1])
+    steps=col1.slider("Step Count",0,20000,step=500)
+    motivation=col2.text_area("🔥 What drove you today?")
 
-with col1:
-    steps = st.number_input("👣 Step Count", min_value=0, step=1000, value=0)
+    # ---- STEP FEEDBACK ----
+    if steps == 0:
+        msg = "🛋️ idle mode | 💭 shoes feel abandoned"
+    elif steps < 3000:
+        msg = "🚶 barely moving | 📉 warm-up missing"
+    elif steps < 5000:
+        msg = "🚶 low activity | 😬 started but stopped"
+    elif steps < 8500:
+        msg = "👣 getting there | ⏳ push a bit more"
+    elif steps < 10000:
+        msg = "👍 almost there | 🎯 close to target"
+    elif steps < 13000:
+        msg = "💪 solid movement | 🌟 healthy range"
+    elif steps < 16000:
+        msg = "🔥 high activity | 🚀 going strong"
+    else:
+        msg = "🏆 beast mode | 👑 elite discipline"
 
-with col2:
-    reason = st.text_area("⚠️ Reason", height=80)
+    if steps < 5000:
+        st.error(f"👣 {steps} steps | {msg}")
+    elif steps < 8500:
+        st.warning(f"👣 {steps} steps | {msg}")
+    elif steps < 12000:
+        st.info(f"👣 {steps} steps | {msg}")
+    else:
+        st.success(f"👣 {steps} steps | {msg}")
 
-# include current input
-if name == "D":
-    d_steps = steps
-elif name == "U":
-    u_steps = steps
+    if name=="D": d_steps=steps
+    else: u_steps=steps
 
-# ---- LIVE FINE ----
-fine = 0
+    fine=0
+    if steps>0:
+        if name=="D":
+            fine=(100 if d_steps<8500 else 0)+(100 if u_steps and u_steps>=13000 else 0)
+        else:
+            fine=(100 if d_steps and d_steps>11000 else 0)+(100 if u_steps<10000 else 0)
 
-if name == "D":
-    cond1 = d_steps is not None and d_steps < 8500
-    cond2 = u_steps is not None and u_steps >= 13000
-    fine = (100 if cond1 else 0) + (100 if cond2 else 0)
+    col3.metric("🍿 Date Fund",f"₹{fine}")
 
-elif name == "U":
-    cond1 = d_steps is not None and d_steps > 11000
-    cond2 = u_steps is not None and u_steps < 10000
-    fine = (100 if cond1 else 0) + (100 if cond2 else 0)
-
-with col3:
-    st.metric("💰 Fine", f"₹{fine}")
-
-# ---- SCREEN TIME ----
-screen_time = st.number_input("📱 Screen Time (hrs)", min_value=0, step=1, value=0)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ---- SLEEP ----
-st.markdown("### 🛌 Sleep Tracker")
+st.markdown('<div id="sleep"></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-card sleep">', unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
+with st.expander("🛌 Sleep",expanded=st.session_state.expand_sleep):
 
-with col1:
-    sleep_from = st.time_input("🌙 Sleep From", value=time(23, 0))
+    c1,c2=st.columns(2)
+    sleep_from=c1.time_input("Sleep From",value=time(0,0))
+    sleep_to=c2.time_input("Wake Up",value=time(0,0))
 
-with col2:
-    sleep_to = st.time_input("🌅 Wake Up", value=time(7, 0))
+    if sleep_from!=time(0,0) or sleep_to!=time(0,0):
 
-sleep_start = datetime.combine(datetime.today(), sleep_from)
-sleep_end = datetime.combine(datetime.today(), sleep_to)
+        s1=datetime.combine(datetime.today(),sleep_from)
+        s2=datetime.combine(datetime.today(),sleep_to)
 
-if sleep_end < sleep_start:
-    sleep_end += timedelta(days=1)
+        if s2<s1: s2+=timedelta(days=1)
 
-sleep_hours = round((sleep_end - sleep_start).seconds / 3600, 2)
+        sleep_hours=round((s2-s1).seconds/3600,2)
 
-st.info(f"🛌 Sleep Duration: {sleep_hours} hrs")
+        message=f"🛌 {sleep_hours} hrs"
 
-# ---- OTHER INPUTS ----
-water = st.selectbox("💧 Water Intake", ["Less", "Mid", "Adequate"])
-junk = st.radio("🍔 Junk Eaten?", ["No", "Yes"])
-lunch = st.text_input("🍱 Lunch")
-dinner = st.text_input("🍽 Dinner")
-gratitude = st.text_area("🙏 Gratitude")
+        if time(0,30)<=sleep_from<=time(5,0):
+            message+=" | 🌙 night owl mode"
+        elif sleep_from>=time(23,0):
+            message+=" | 😴 decent bedtime"
+        else:
+            message+=" | ⏰ early sleeper"
+
+        if sleep_to>time(10,0):
+            message+=" | 🌅 woke late"
+        elif sleep_to<time(6,0):
+            message+=" | 🐓 early bird"
+        else:
+            message+=" | ☀️ normal wake"
+
+        if sleep_hours<6:
+            message+=" | 💀 survival mode"
+        elif sleep_hours<8:
+            message+=" | ☕ low battery"
+        elif sleep_hours<=9:
+            message+=" | 🌟 elite recovery"
+        else:
+            message+=" | 🐻 hibernation"
+
+        st.info(message)
+    else:
+        sleep_hours=0
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ---- LIFESTYLE ----
+st.markdown('<div id="lifestyle"></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-card lifestyle">', unsafe_allow_html=True)
+
+with st.expander("⚖️ Lifestyle",expanded=st.session_state.expand_lifestyle):
+
+    screen_time=st.number_input("📱 Screen Time (hrs)",min_value=0.0,step=0.5)
+
+    if screen_time>6:
+        st.error("💀 phone owns your soul")
+    elif screen_time>3.5:
+        st.warning("📱 scrolling got clingy")
+
+    water=st.selectbox("💧 Water",["Less","Mid","Adequate"])
+    care=st.radio("🌿 Skin & Hair Care",["No","Yes"])
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ---- NUTRITION ----
+st.markdown('<div id="nutrition"></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-card nutrition">', unsafe_allow_html=True)
+
+with st.expander("🥦 Nutrition",expanded=st.session_state.expand_food):
+    lunch=st.text_input("🥗 Lunch")
+    dinner=st.text_input("🍽 Dinner")
+    junk=st.radio("🍔 Junk?",["No","Yes"])
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ---- REFLECTION ----
+st.markdown('<div id="reflection"></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-card reflection">', unsafe_allow_html=True)
+
+with st.expander("🌻 Reflection",expanded=st.session_state.expand_reflection):
+    gratitude=st.text_area("What are you grateful for today?")
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # ---- SUBMIT ----
-if st.button("Submit"):
+if st.button("🎯 Complete Today"):
 
-    errors = []
+    field_errors={}
 
-    if steps == 0:
-        errors.append("Step Count required")
-    if screen_time == 0:
-        errors.append("Screen Time required")
-    if not reason.strip():
-        errors.append("Reason required")
-    if not lunch:
-        errors.append("Lunch required")
-    if not dinner:
-        errors.append("Dinner required")
-    if not gratitude.strip():
-        errors.append("Gratitude required")
-    if sleep_from == sleep_to:
-        errors.append("Sleep times cannot match")
+    if steps==0: field_errors["steps"]=True
+    if not motivation.strip(): field_errors["motivation"]=True
+    if not lunch: field_errors["lunch"]=True
+    if not dinner: field_errors["dinner"]=True
+    if not gratitude.strip(): field_errors["gratitude"]=True
+    if sleep_from==time(0,0) and sleep_to==time(0,0): field_errors["sleep"]=True
 
-    if errors:
-        st.error("⚠️ Fix the following:")
-        for e in errors:
-            st.write(f"- {e}")
+    if field_errors:
+
+        if "steps" in field_errors:
+            st.session_state.expand_activity=True
+            scroll_to("activity")
+        elif "sleep" in field_errors:
+            st.session_state.expand_sleep=True
+            scroll_to("sleep")
+        elif "lunch" in field_errors:
+            st.session_state.expand_food=True
+            scroll_to("nutrition")
+        elif "gratitude" in field_errors:
+            st.session_state.expand_reflection=True
+            scroll_to("reflection")
+
+        st.error("⚠️ Fix highlighted sections")
         st.stop()
 
-    # ---- UPSERT (NO DUPLICATES) ----
-    existing_index = df[
-        (df["Date"] == date_str) & (df["Name"] == name)
-    ].index
+    row=[str(uuid.uuid4()),date_str,name,steps,fine,motivation,
+         sleep_from,sleep_to,sleep_hours,
+         water,screen_time,care,lunch,dinner,junk,gratitude]
 
-    if len(existing_index) > 0:
-        idx = existing_index[0]
+    df.loc[len(df)]=row
+    df.to_csv(FILE,index=False)
 
-        df.at[idx, "Step Count"] = steps
-        df.at[idx, "Reason"] = reason
-        df.at[idx, "Sleep From"] = sleep_from
-        df.at[idx, "Sleep To"] = sleep_to
-        df.at[idx, "Sleep Hours"] = sleep_hours
-        df.at[idx, "Water"] = water
-        df.at[idx, "Screen Time"] = screen_time
-        df.at[idx, "Lunch"] = lunch
-        df.at[idx, "Dinner"] = dinner
-        df.at[idx, "Junk Eaten"] = junk
-        df.at[idx, "Gratitude"] = gratitude
+    st.session_state.submitted=True
 
-    else:
-        new_row = {
-            "ID": str(uuid.uuid4()),
-            "Date": date_str,
-            "Name": name,
-            "Step Count": steps,
-            "Fine": 0,
-            "Reason": reason,
-            "Sleep From": sleep_from,
-            "Sleep To": sleep_to,
-            "Sleep Hours": sleep_hours,
-            "Water": water,
-            "Screen Time": screen_time,
-            "Lunch": lunch,
-            "Dinner": dinner,
-            "Junk Eaten": junk,
-            "Gratitude": gratitude
-        }
-        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    st.success("🎉 Today completed!")
+    st.balloons()
 
-    # ---- SYNC BOTH USERS ----
-    mask = df["Date"] == date_str
-    today_df = df[mask]
+    # ---- INSIGHT ----
+    st.markdown("### 💡 Daily Insight")
 
-    d_steps = None
-    u_steps = None
+    parts=[]
+    parts.append("💪 beast mode" if steps>=10000 else "🚶 lazy mode")
+    parts.append("🛌 slept like royalty" if sleep_hours>=8 else "😴 low battery")
+    parts.append("📱 balanced screen" if screen_time<=3.5 else "💀 phone owns you")
+    parts.append("🥗 clean eating" if junk=="No" else "🍔 junk cameo")
+    parts.append("🌿 glow-up" if care=="Yes" else "🪞 no self-care")
 
-    for _, row in today_df.iterrows():
-        if row["Name"] == "D":
-            d_steps = row["Step Count"]
-        elif row["Name"] == "U":
-            u_steps = row["Step Count"]
-
-    d_fine = (100 if d_steps and d_steps < 8500 else 0) + \
-             (100 if u_steps and u_steps >= 13000 else 0)
-
-    u_fine = (100 if d_steps and d_steps > 11000 else 0) + \
-             (100 if u_steps and u_steps < 10000 else 0)
-
-    for idx in df[mask].index:
-        if df.at[idx, "Name"] == "D":
-            df.at[idx, "Fine"] = d_fine
-        elif df.at[idx, "Name"] == "U":
-            df.at[idx, "Fine"] = u_fine
-
-    df.to_csv(FILE, index=False)
-
-    st.success("✅ Saved successfully!")
-
-# ---- TABLE ----
-st.markdown("---")
-st.subheader("📊 Records")
-st.dataframe(df, use_container_width=True)
-
-# ---- CHARTS ----
-st.markdown("### 📈 Trends (Last 7 Days)")
-
-if not df.empty:
-
-    df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
-
-    last_7_days = df[
-        df["Date"] >= (pd.to_datetime("today") - pd.Timedelta(days=7))
-    ].sort_values("Date")
-
-    if not last_7_days.empty:
-
-        st.subheader("👣 Steps")
-        fig1 = plt.figure()
-        plt.plot(last_7_days["Date"], last_7_days["Step Count"])
-        st.pyplot(fig1)
-
-        st.subheader("🛌 Sleep")
-        fig2 = plt.figure()
-        plt.plot(last_7_days["Date"], last_7_days["Sleep Hours"])
-        st.pyplot(fig2)
-
-        st.subheader("💰 Fine")
-        fig3 = plt.figure()
-        plt.plot(last_7_days["Date"], last_7_days["Fine"])
-        st.pyplot(fig3)
+    st.info(random.choice(["✨ Today:", "🔥 Vibe:", "🎬 Plot:"])+" | ".join(parts))
