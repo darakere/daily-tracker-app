@@ -17,15 +17,89 @@ for key in [
         st.session_state[key] = False
 
 # ---- THEME ----
+
 st.markdown("""
 <style>
-.stApp { background:#F9FBFD; }
-.section-card { border-radius:14px; padding:14px; margin-bottom:12px; border:1px solid rgba(0,0,0,0.04);}
-.activity { background:#EAF4FF;}
-.sleep { background:#F3E8FF;}
-.lifestyle { background:#E8F8F1;}
-.nutrition { background:#FFF4E6;}
-.reflection { background:#FFF9DB;}
+
+/* ===== BASE (LIGHT MODE DEFAULT) ===== */
+:root {
+    --bg-main: #F9FBFD;
+    --text-main: #111;
+
+    --card-activity: #EAF4FF;
+    --card-sleep: #F3E8FF;
+    --card-lifestyle: #E8F8F1;
+    --card-nutrition: #FFF4E6;
+    --card-reflection: #FFF9DB;
+}
+
+/* ===== DARK MODE ===== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-main: #0E1117;
+        --text-main: #E6EDF3;
+
+        --card-activity: #1E2A38;
+        --card-sleep: #2A1E38;
+        --card-lifestyle: #1E3830;
+        --card-nutrition: #3A2E1E;
+        --card-reflection: #3A381E;
+    }
+}
+
+/* ===== APPLY GLOBAL ===== */
+.stApp {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+}
+
+/* ===== CARDS ===== */
+.section-card {
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:12px;
+    border:1px solid rgba(255,255,255,0.05);
+    color: var(--text-main);
+}
+
+/* Section colors */
+.activity { background: var(--card-activity); }
+.sleep { background: var(--card-sleep); }
+.lifestyle { background: var(--card-lifestyle); }
+.nutrition { background: var(--card-nutrition); }
+.reflection { background: var(--card-reflection); }
+
+/* ===== INPUT FIXES ===== */
+input, textarea, select {
+    color: var(--text-main) !important;
+    background-color: transparent !important;
+}
+
+/* Labels */
+label {
+    color: var(--text-main) !important;
+}
+
+/* Metrics */
+[data-testid="stMetricValue"] {
+    color: var(--text-main) !important;
+}
+
+/* Expander */
+.st-expander {
+    color: var(--text-main);
+}
+
+/* Alerts */
+.stAlert {
+    color: var(--text-main);
+}
+
+/* ===== CLEAN UI ===== */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
 </style>
 """, unsafe_allow_html=True)
 
