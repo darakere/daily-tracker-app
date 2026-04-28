@@ -3,7 +3,6 @@ import pandas as pd
 import os
 from datetime import datetime, timedelta, time
 import uuid
-import matplotlib.pyplot as plt
 import random
 
 st.set_page_config(page_title="Daily Tracker", layout="centered")
@@ -12,7 +11,7 @@ st.set_page_config(page_title="Daily Tracker", layout="centered")
 for key in [
     "expand_activity","expand_sleep","expand_lifestyle",
     "expand_food","expand_reflection",
-    "show_data","show_trends","submitted"
+    "show_data","submitted"
 ]:
     if key not in st.session_state:
         st.session_state[key] = False
@@ -36,7 +35,7 @@ st.title("📋 Daily Tracker")
 tab1, tab2 = st.tabs(["📋 Habit Tracker", "🎟️ Experiences Tracker"])
 
 # =========================================================
-# ===================== HABIT TRACKER ======================
+# ================= HABIT TRACKER ==========================
 # =========================================================
 with tab1:
 
@@ -61,14 +60,14 @@ with tab1:
 
     # ================= ACTIVITY =================
     st.markdown('<div class="section-card activity">', unsafe_allow_html=True)
-    with st.expander("👣 Activity", expanded=st.session_state.expand_activity):
+    with st.expander("👣 Activity"):
 
         col1, col2, col3 = st.columns([2,2,1])
 
         steps = col1.slider("Step Count", 0, 20000, step=500)
         motivation = col2.text_area("🔥 What drove you today?")
 
-        # ---- STEP FEEDBACK (single line) ----
+        # ---- STEP FEEDBACK ----
         if steps == 0:
             msg = "🛋️ idle mode | 💭 shoes abandoned"
         elif steps < 3000:
@@ -96,12 +95,10 @@ with tab1:
             st.success(f"👣 {steps} steps | {msg}")
 
         # ---- DATE FUND ----
-        fine = 0
-        if steps > 0:
-            if name == "D":
-                fine = 100 if steps < 8500 else 0
-            else:
-                fine = 100 if steps < 10000 else 0
+        if name == "D":
+            fine = 100 if steps < 8500 else 0
+        else:
+            fine = 100 if steps < 10000 else 0
 
         col3.metric("🍿 Date Fund", f"₹{fine}")
 
@@ -109,7 +106,7 @@ with tab1:
 
     # ================= SLEEP =================
     st.markdown('<div class="section-card sleep">', unsafe_allow_html=True)
-    with st.expander("🛌 Sleep", expanded=st.session_state.expand_sleep):
+    with st.expander("🛌 Sleep"):
 
         c1, c2 = st.columns(2)
 
@@ -159,7 +156,7 @@ with tab1:
 
     # ================= LIFESTYLE =================
     st.markdown('<div class="section-card lifestyle">', unsafe_allow_html=True)
-    with st.expander("⚖️ Lifestyle", expanded=st.session_state.expand_lifestyle):
+    with st.expander("⚖️ Lifestyle"):
 
         screen_time = st.number_input("📱 Screen Time (hrs)", min_value=0.0, step=0.5)
 
@@ -175,7 +172,7 @@ with tab1:
 
     # ================= NUTRITION =================
     st.markdown('<div class="section-card nutrition">', unsafe_allow_html=True)
-    with st.expander("🥦 Nutrition", expanded=st.session_state.expand_food):
+    with st.expander("🥦 Nutrition"):
 
         lunch = st.text_input("🥗 Lunch")
         dinner = st.text_input("🍽 Dinner")
@@ -185,7 +182,7 @@ with tab1:
 
     # ================= REFLECTION =================
     st.markdown('<div class="section-card reflection">', unsafe_allow_html=True)
-    with st.expander("🌻 Reflection", expanded=st.session_state.expand_reflection):
+    with st.expander("🌻 Reflection"):
 
         gratitude = st.text_area("What are you grateful for today?")
 
@@ -198,17 +195,27 @@ with tab1:
             st.error("⚠️ Please fill required fields")
             st.stop()
 
-        row = [
-            str(uuid.uuid4()), date_str, name, steps, fine, motivation,
-            sleep_from, sleep_to, sleep_hours,
-            water, screen_time, care,
-            lunch, dinner, junk, gratitude
-        ]
+        # ✅ SAFE SAVE (DICT → no mismatch error)
+        df.loc[len(df)] = {
+            "ID": str(uuid.uuid4()),
+            "Date": date_str,
+            "Name": name,
+            "Step Count": steps,
+            "Date Fund": fine,
+            "Motivation": motivation,
+            "Sleep From": sleep_from,
+            "Sleep To": sleep_to,
+            "Sleep Hours": sleep_hours,
+            "Water": water,
+            "Screen Time": screen_time,
+            "Care": care,
+            "Lunch": lunch,
+            "Dinner": dinner,
+            "Junk": junk,
+            "Gratitude": gratitude
+        }
 
-        df.loc[len(df)] = row
         df.to_csv(FILE, index=False)
-
-        st.session_state.submitted = True
 
         st.success("🎉 Today completed!")
         st.balloons()
@@ -220,24 +227,11 @@ with tab1:
         parts.append("💪 beast mode" if steps >= 10000 else "🚶 lazy mode")
         parts.append("🛌 slept well" if sleep_hours >= 8 else "😴 low sleep")
         parts.append("📱 balanced screen" if screen_time <= 3.5 else "💀 phone overload")
-        parts.append("🥗 clean eating" if junk == "No" else "🍔 junk cameo")
-        parts.append("🌿 glow-up" if care == "Yes" else "🪞 no self-care")
 
-        st.info(random.choice(["✨ Today:", "🔥 Vibe:", "🎬 Plot:"]) + " " + " | ".join(parts))
-
-    # ================= VIEW DATA =================
-    st.markdown("---")
-
-    if not df.empty:
-        if st.button("👀 View Data"):
-            st.session_state.show_data = not st.session_state.show_data
-
-        if st.session_state.show_data:
-            st.dataframe(df)
-            st.download_button("📥 Download CSV", df.to_csv(index=False), "data.csv")
+        st.info("✨ " + " | ".join(parts))
 
 # =========================================================
-# ===================== TAB 2 ==============================
+# ================= EXPERIENCE TAB =========================
 # =========================================================
 with tab2:
 
