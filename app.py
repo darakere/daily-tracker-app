@@ -55,7 +55,7 @@ with tab1:
     date_str = str(date)
 
     # ---- CHILD ----
-    with st.expander("👤 God's favvvv Child"):
+    with st.expander("👤 God's Favvv Child"):
         name = st.selectbox("Select Child", ["D","U"])
 
     # ================= ACTIVITY =================
@@ -106,7 +106,7 @@ with tab1:
 
     # ================= SLEEP =================
     st.markdown('<div class="section-card sleep">', unsafe_allow_html=True)
-    with st.expander("🛌 Sleep"):
+    with st.expander("🛌 Niddhe"):
 
         c1, c2 = st.columns(2)
 
