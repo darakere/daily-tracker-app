@@ -125,7 +125,7 @@ with tab1:
 
     # ================= SLEEP =================
     st.markdown('<div class="section-card sleep">', unsafe_allow_html=True)
-    with st.expander("🛌 Niddhe"):
+    with st.expander("🛌 ನಿದ್ದೆ.........."):
 
         c1, c2 = st.columns(2)
 
