@@ -80,13 +80,13 @@ with tab1:
 
     today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
 
-date = st.date_input(
-    "📅 Date",
-    value=today,
-    max_value=today
-)
-
-date_str = str(date)
+    date = st.date_input(
+        "📅 Date",
+        value=today,
+        max_value=today
+    )
+    
+    date_str = str(date)
 
     # ---- CHILD ----
     with st.expander("👤 God's Favvv Child"):
