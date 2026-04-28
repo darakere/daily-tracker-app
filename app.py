@@ -29,7 +29,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📋 Daily Tracker")
+st.title("📋 DU Tracker")
 
 # ---- TABS ----
 tab1, tab2 = st.tabs(["📋 Habit Tracker", "🎟️ Experiences Tracker"])
