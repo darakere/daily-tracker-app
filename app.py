@@ -55,7 +55,7 @@ with tab1:
     date_str = str(date)
 
     # ---- CHILD ----
-    with st.expander("👤 Child"):
+    with st.expander("👤 God's favvvv Child"):
         name = st.selectbox("Select Child", ["D","U"])
 
     # ================= ACTIVITY =================
