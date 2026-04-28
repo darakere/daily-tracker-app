@@ -172,7 +172,7 @@ with tab1:
 
     # ================= NUTRITION =================
     st.markdown('<div class="section-card nutrition">', unsafe_allow_html=True)
-    with st.expander("🥦 Nutrition"):
+    with st.expander("🥦 ತಿಂಡಿ/ ತಿನಿಸು"):
 
         lunch = st.text_input("🥗 Lunch")
         dinner = st.text_input("🍽 Dinner")
