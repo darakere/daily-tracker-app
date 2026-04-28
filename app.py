@@ -8,7 +8,7 @@ import random
 st.set_page_config(page_title="Daily Tracker", layout="centered")
 
 
-st.set_page_config(page_title="Daily Tracker", layout="centered")
+
 
 # ---- HIDE STREAMLIT BRANDING ----
 st.markdown("""
