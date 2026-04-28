@@ -70,9 +70,23 @@ label {
 }
 
 /* Clean UI */
+
+
+
+/* Hide Streamlit branding */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
+
+/* Extra: remove bottom space */
+footer:after {
+    content:'';
+    display:none;
+}
+
+
+
+
 
 </style>
 """, unsafe_allow_html=True)
