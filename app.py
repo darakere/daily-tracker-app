@@ -24,12 +24,7 @@ footer:after {
 </style>
 """, unsafe_allow_html=True)
 
-# ---- SESSION STATE ----
-for key in [
-    "expand_activity","expand_sleep","expand_lifestyle",
-    "expand_food","expand_reflection",
-    "show_data","submitted"
-]:
+
 
 # ---- SESSION STATE ----
 for key in [
