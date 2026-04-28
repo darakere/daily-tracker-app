@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from datetime import datetime, timedelta, time
 import uuid
+import matplotlib.pyplot as plt
 import random
 
 st.set_page_config(page_title="Daily Tracker", layout="centered")
@@ -10,7 +11,8 @@ st.set_page_config(page_title="Daily Tracker", layout="centered")
 # ---- SESSION STATE ----
 for key in [
     "expand_activity","expand_sleep","expand_lifestyle",
-    "expand_food","expand_reflection"
+    "expand_food","expand_reflection",
+    "show_data","show_trends","submitted"
 ]:
     if key not in st.session_state:
         st.session_state[key] = False
@@ -34,38 +36,39 @@ st.title("📋 Daily Tracker")
 tab1, tab2 = st.tabs(["📋 Habit Tracker", "🎟️ Experiences Tracker"])
 
 # =========================================================
-# ===================== TAB 1 ==============================
+# ===================== HABIT TRACKER ======================
 # =========================================================
 with tab1:
 
-    FILE="sheet1.csv"
+    FILE = "sheet1.csv"
 
     if os.path.exists(FILE):
-        df=pd.read_csv(FILE)
+        df = pd.read_csv(FILE)
     else:
-        df=pd.DataFrame(columns=[
+        df = pd.DataFrame(columns=[
             "ID","Date","Name","Step Count","Date Fund","Motivation",
-            "Sleep From","Sleep To","Sleep Hours"
+            "Sleep From","Sleep To","Sleep Hours",
+            "Water","Screen Time","Care",
+            "Lunch","Dinner","Junk","Gratitude"
         ])
 
-    date=st.date_input("📅 Date", datetime.today())
-    date_str=str(date)
+    date = st.date_input("📅 Date", datetime.today())
+    date_str = str(date)
 
     # ---- CHILD ----
     with st.expander("👤 Child"):
-        name=st.selectbox("Select Child",["D","U"])
+        name = st.selectbox("Select Child", ["D","U"])
 
-    # ---- ACTIVITY ----
+    # ================= ACTIVITY =================
     st.markdown('<div class="section-card activity">', unsafe_allow_html=True)
+    with st.expander("👣 Activity", expanded=st.session_state.expand_activity):
 
-    with st.expander("👣 Activity",expanded=st.session_state.expand_activity):
+        col1, col2, col3 = st.columns([2,2,1])
 
-        col1,col2,col3=st.columns([2,2,1])
+        steps = col1.slider("Step Count", 0, 20000, step=500)
+        motivation = col2.text_area("🔥 What drove you today?")
 
-        steps=col1.slider("Step Count",0,20000,step=500)
-        motivation=col2.text_area("🔥 What drove you today?")
-
-        # ---- STEP FEEDBACK ----
+        # ---- STEP FEEDBACK (single line) ----
         if steps == 0:
             msg = "🛋️ idle mode | 💭 shoes abandoned"
         elif steps < 3000:
@@ -104,81 +107,134 @@ with tab1:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---- SLEEP ----
+    # ================= SLEEP =================
     st.markdown('<div class="section-card sleep">', unsafe_allow_html=True)
+    with st.expander("🛌 Sleep", expanded=st.session_state.expand_sleep):
 
-    with st.expander("🛌 Sleep",expanded=st.session_state.expand_sleep):
+        c1, c2 = st.columns(2)
 
-        c1,c2=st.columns(2)
-        sleep_from=c1.time_input("Sleep From",value=time(0,0))
-        sleep_to=c2.time_input("Wake Up",value=time(0,0))
+        sleep_from = c1.time_input("Sleep From", value=time(0,0))
+        sleep_to = c2.time_input("Wake Up", value=time(0,0))
 
-        if sleep_from!=time(0,0) or sleep_to!=time(0,0):
+        if sleep_from != time(0,0) or sleep_to != time(0,0):
 
-            s1=datetime.combine(datetime.today(),sleep_from)
-            s2=datetime.combine(datetime.today(),sleep_to)
+            s1 = datetime.combine(datetime.today(), sleep_from)
+            s2 = datetime.combine(datetime.today(), sleep_to)
 
-            if s2<s1: s2+=timedelta(days=1)
+            if s2 < s1:
+                s2 += timedelta(days=1)
 
-            sleep_hours=round((s2-s1).seconds/3600,2)
+            sleep_hours = round((s2 - s1).seconds / 3600, 2)
 
-            message=f"🛌 {sleep_hours} hrs"
+            message = f"🛌 {sleep_hours} hrs"
 
-            if time(0,30)<=sleep_from<=time(5,0):
-                message+=" | 🌙 night owl"
-            elif sleep_from>=time(23,0):
-                message+=" | 😴 decent bedtime"
+            if time(0,30) <= sleep_from <= time(5,0):
+                message += " | 🌙 night owl"
+            elif sleep_from >= time(23,0):
+                message += " | 😴 decent bedtime"
             else:
-                message+=" | ⏰ early sleeper"
+                message += " | ⏰ early sleeper"
 
-            if sleep_to>time(10,0):
-                message+=" | 🌅 woke late"
-            elif sleep_to<time(6,0):
-                message+=" | 🐓 early bird"
+            if sleep_to > time(10,0):
+                message += " | 🌅 woke late"
+            elif sleep_to < time(6,0):
+                message += " | 🐓 early bird"
             else:
-                message+=" | ☀️ normal wake"
+                message += " | ☀️ normal wake"
 
-            if sleep_hours<6:
-                message+=" | 💀 survival"
-            elif sleep_hours<8:
-                message+=" | ☕ low battery"
-            elif sleep_hours<=9:
-                message+=" | 🌟 elite recovery"
+            if sleep_hours < 6:
+                message += " | 💀 survival"
+            elif sleep_hours < 8:
+                message += " | ☕ low battery"
+            elif sleep_hours <= 9:
+                message += " | 🌟 elite recovery"
             else:
-                message+=" | 🐻 hibernation"
+                message += " | 🐻 hibernation"
 
             st.info(message)
         else:
-            sleep_hours=0
+            sleep_hours = 0
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ---- SUBMIT ----
+    # ================= LIFESTYLE =================
+    st.markdown('<div class="section-card lifestyle">', unsafe_allow_html=True)
+    with st.expander("⚖️ Lifestyle", expanded=st.session_state.expand_lifestyle):
+
+        screen_time = st.number_input("📱 Screen Time (hrs)", min_value=0.0, step=0.5)
+
+        if screen_time > 6:
+            st.error("💀 phone owns your soul")
+        elif screen_time > 3.5:
+            st.warning("📱 scrolling got clingy")
+
+        water = st.selectbox("💧 Water", ["Less","Mid","Adequate"])
+        care = st.radio("🌿 Skin & Hair Care", ["No","Yes"])
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ================= NUTRITION =================
+    st.markdown('<div class="section-card nutrition">', unsafe_allow_html=True)
+    with st.expander("🥦 Nutrition", expanded=st.session_state.expand_food):
+
+        lunch = st.text_input("🥗 Lunch")
+        dinner = st.text_input("🍽 Dinner")
+        junk = st.radio("🍔 Junk?", ["No","Yes"])
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ================= REFLECTION =================
+    st.markdown('<div class="section-card reflection">', unsafe_allow_html=True)
+    with st.expander("🌻 Reflection", expanded=st.session_state.expand_reflection):
+
+        gratitude = st.text_area("What are you grateful for today?")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ================= SUBMIT =================
     if st.button("🎯 Complete Today"):
 
         if steps == 0 or not motivation.strip():
-            st.error("⚠️ Fill required fields")
+            st.error("⚠️ Please fill required fields")
             st.stop()
 
-        row=[
+        row = [
             str(uuid.uuid4()), date_str, name, steps, fine, motivation,
-            sleep_from, sleep_to, sleep_hours
+            sleep_from, sleep_to, sleep_hours,
+            water, screen_time, care,
+            lunch, dinner, junk, gratitude
         ]
 
         df.loc[len(df)] = row
         df.to_csv(FILE, index=False)
 
+        st.session_state.submitted = True
+
         st.success("🎉 Today completed!")
         st.balloons()
 
-        # ---- DAILY INSIGHT ----
+        # ---- INSIGHT ----
         st.markdown("### 💡 Daily Insight")
 
-        parts=[]
-        parts.append("💪 beast mode" if steps>=10000 else "🚶 lazy mode")
-        parts.append("🛌 slept well" if sleep_hours>=8 else "😴 low sleep")
+        parts = []
+        parts.append("💪 beast mode" if steps >= 10000 else "🚶 lazy mode")
+        parts.append("🛌 slept well" if sleep_hours >= 8 else "😴 low sleep")
+        parts.append("📱 balanced screen" if screen_time <= 3.5 else "💀 phone overload")
+        parts.append("🥗 clean eating" if junk == "No" else "🍔 junk cameo")
+        parts.append("🌿 glow-up" if care == "Yes" else "🪞 no self-care")
 
-        st.info("✨ " + " | ".join(parts))
+        st.info(random.choice(["✨ Today:", "🔥 Vibe:", "🎬 Plot:"]) + " " + " | ".join(parts))
+
+    # ================= VIEW DATA =================
+    st.markdown("---")
+
+    if not df.empty:
+        if st.button("👀 View Data"):
+            st.session_state.show_data = not st.session_state.show_data
+
+        if st.session_state.show_data:
+            st.dataframe(df)
+            st.download_button("📥 Download CSV", df.to_csv(index=False), "data.csv")
 
 # =========================================================
 # ===================== TAB 2 ==============================
@@ -188,5 +244,4 @@ with tab2:
     st.header("🎟️ Experiences Tracker")
 
     st.info("🚧 Coming soon... exciting things are on the way!")
-
     st.caption("✨ You'll soon be able to track and revisit your experiences here.")
