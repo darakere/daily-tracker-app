@@ -156,7 +156,7 @@ with tab1:
 
     # ================= LIFESTYLE =================
     st.markdown('<div class="section-card lifestyle">', unsafe_allow_html=True)
-    with st.expander("⚖️ Lifestyle"):
+    with st.expander("⚖️ ಇಂದಿನ ದಿನ"):
 
         screen_time = st.number_input("📱 Screen Time (hrs)", min_value=0.0, step=0.5)
 
