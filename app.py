@@ -7,12 +7,7 @@ import random
 
 st.set_page_config(page_title="Daily Tracker", layout="centered")
 
-
-
-
 # ---- HIDE STREAMLIT BRANDING ----
-
-
 st.markdown("""
 <style>
 #MainMenu, footer, header {
@@ -30,79 +25,38 @@ for key in [
     if key not in st.session_state:
         st.session_state[key] = False
 
-# ---- THEME ----
+# ---- TIME OPTIONS (DESCENDING) ----
+def generate_time_options():
+    times = []
+    for h in range(23, -1, -1):
+        for m in [30, 0]:
+            times.append(f"{h:02d}:{m:02d}")
+    return times
 
+time_options = generate_time_options()
+
+# ---- THEME ----
 st.markdown("""
 <style>
+.stApp { background:#F9FBFD; color:#111; }
 
-/* ===== LIGHT MODE ===== */
-.stApp {
-    background-color: #F9FBFD;
-    color: #111;
-}
-
-/* Section cards (light) */
 .activity { background:#EAF4FF; }
 .sleep { background:#F3E8FF; }
 .lifestyle { background:#E8F8F1; }
 .nutrition { background:#FFF4E6; }
 .reflection { background:#FFF9DB; }
 
-/* ===== DARK MODE (Streamlit specific) ===== */
-[data-theme="dark"] .stApp {
-    background-color: #0E1117;
-    color: #E6EDF3;
-}
-
-[data-theme="dark"] .activity { background:#1E2A38; }
-[data-theme="dark"] .sleep { background:#2A1E38; }
-[data-theme="dark"] .lifestyle { background:#1E3830; }
-[data-theme="dark"] .nutrition { background:#3A2E1E; }
-[data-theme="dark"] .reflection { background:#3A381E; }
-
-/* ===== COMMON ===== */
 .section-card {
     border-radius:14px;
     padding:14px;
     margin-bottom:12px;
-    border:1px solid rgba(255,255,255,0.05);
+    border:1px solid rgba(0,0,0,0.04);
 }
-
-/* Inputs */
-input, textarea {
-    color: inherit !important;
-}
-
-/* Labels */
-label {
-    color: inherit !important;
-}
-
-/* Metrics */
-[data-testid="stMetricValue"] {
-    color: inherit !important;
-}
-
-/* Clean UI */
-
-
-
-/* Hide Streamlit branding */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-
-
-
-
-
-
 </style>
 """, unsafe_allow_html=True)
 
 st.title("📋 DU Tracker")
 
-# ---- TABS ----
 tab1, tab2 = st.tabs(["📋 Habit Tracker", "🎟️ Experiences Tracker"])
 
 # =========================================================
@@ -140,30 +94,15 @@ with tab1:
 
         # ---- STEP FEEDBACK ----
         if steps == 0:
-            msg = "🛋️ idle mode | 💭 shoes abandoned"
-        elif steps < 3000:
-            msg = "🚶 barely moving | 📉 warm-up missing"
+            msg = "🛋️ idle mode"
         elif steps < 5000:
-            msg = "🚶 low activity | 😬 stopped early"
-        elif steps < 8500:
-            msg = "👣 getting there | ⏳ push more"
+            msg = "🚶 low activity"
         elif steps < 10000:
-            msg = "👍 almost there | 🎯 close"
-        elif steps < 13000:
-            msg = "💪 solid movement | 🌟 healthy"
-        elif steps < 16000:
-            msg = "🔥 high activity | 🚀 strong"
+            msg = "👣 getting there"
         else:
-            msg = "🏆 beast mode | 👑 elite"
+            msg = "🔥 beast mode"
 
-        if steps < 5000:
-            st.error(f"👣 {steps} steps | {msg}")
-        elif steps < 8500:
-            st.warning(f"👣 {steps} steps | {msg}")
-        elif steps < 12000:
-            st.info(f"👣 {steps} steps | {msg}")
-        else:
-            st.success(f"👣 {steps} steps | {msg}")
+        st.info(f"👣 {steps} steps | {msg}")
 
         # ---- DATE FUND ----
         if name == "D":
@@ -181,53 +120,50 @@ with tab1:
 
         c1, c2 = st.columns(2)
 
-        sleep_from = c1.time_input("Sleep From", value=time(0,0))
-        sleep_to = c2.time_input("Wake Up", value=time(0,0))
+        sleep_from_str = c1.selectbox("Sleep From", time_options, index=1)
+        sleep_to_str = c2.selectbox("Wake Up", time_options, index=30)
 
-        if sleep_from != time(0,0) or sleep_to != time(0,0):
+        sleep_from = datetime.strptime(sleep_from_str, "%H:%M").time()
+        sleep_to = datetime.strptime(sleep_to_str, "%H:%M").time()
 
-            s1 = datetime.combine(datetime.today(), sleep_from)
-            s2 = datetime.combine(datetime.today(), sleep_to)
+        s1 = datetime.combine(datetime.today(), sleep_from)
+        s2 = datetime.combine(datetime.today(), sleep_to)
 
-            if s2 < s1:
-                s2 += timedelta(days=1)
+        if s2 < s1:
+            s2 += timedelta(days=1)
 
-            sleep_hours = round((s2 - s1).seconds / 3600, 2)
+        sleep_hours = round((s2 - s1).seconds / 3600, 2)
 
-            message = f"🛌 {sleep_hours} hrs"
+        message = f"🛌 {sleep_hours} hrs"
 
-            if time(0,30) <= sleep_from <= time(5,0):
-                message += " | 🌙 night owl"
-            elif sleep_from >= time(23,0):
-                message += " | 😴 decent bedtime"
-            else:
-                message += " | ⏰ early sleeper"
-
-            if sleep_to > time(10,0):
-                message += " | 🌅 woke late"
-            elif sleep_to < time(6,0):
-                message += " | 🐓 early bird"
-            else:
-                message += " | ☀️ normal wake"
-
-            if sleep_hours < 6:
-                message += " | 💀 survival"
-            elif sleep_hours < 8:
-                message += " | ☕ low battery"
-            elif sleep_hours <= 9:
-                message += " | 🌟 elite recovery"
-            else:
-                message += " | 🐻 hibernation"
-
-            st.info(message)
+        if time(0,30) <= sleep_from <= time(5,0):
+            message += " | 🌙 night owl"
+        elif sleep_from >= time(23,0):
+            message += " | 😴 decent bedtime"
         else:
-            sleep_hours = 0
+            message += " | ⏰ early sleeper"
+
+        if sleep_to > time(10,0):
+            message += " | 🌅 woke late"
+        elif sleep_to < time(6,0):
+            message += " | 🐓 early bird"
+        else:
+            message += " | ☀️ normal wake"
+
+        if sleep_hours < 6:
+            message += " | 💀 survival"
+        elif sleep_hours < 8:
+            message += " | ☕ low battery"
+        else:
+            message += " | 🌟 good sleep"
+
+        st.info(message)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
     # ================= LIFESTYLE =================
     st.markdown('<div class="section-card lifestyle">', unsafe_allow_html=True)
-    with st.expander("⚖️ ಇಂದಿನ ದಿನ"):
+    with st.expander("⚖️ Lifestyle"):
 
         screen_time = st.number_input("📱 Screen Time (hrs)", min_value=0.0, step=0.5)
 
@@ -243,7 +179,7 @@ with tab1:
 
     # ================= NUTRITION =================
     st.markdown('<div class="section-card nutrition">', unsafe_allow_html=True)
-    with st.expander("🥦 ತಿಂಡಿ/ ತಿನಿಸು"):
+    with st.expander("🥦 Nutrition"):
 
         lunch = st.text_input("🥗 Lunch")
         dinner = st.text_input("🍽 Dinner")
@@ -266,7 +202,6 @@ with tab1:
             st.error("⚠️ Please fill required fields")
             st.stop()
 
-        # ✅ SAFE SAVE (DICT → no mismatch error)
         df.loc[len(df)] = {
             "ID": str(uuid.uuid4()),
             "Date": date_str,
@@ -291,13 +226,14 @@ with tab1:
         st.success("🎉 Today completed!")
         st.balloons()
 
-        # ---- INSIGHT ----
         st.markdown("### 💡 Daily Insight")
 
         parts = []
         parts.append("💪 beast mode" if steps >= 10000 else "🚶 lazy mode")
         parts.append("🛌 slept well" if sleep_hours >= 8 else "😴 low sleep")
         parts.append("📱 balanced screen" if screen_time <= 3.5 else "💀 phone overload")
+        parts.append("🥗 clean eating" if junk == "No" else "🍔 junk cameo")
+        parts.append("🌿 glow-up" if care == "Yes" else "🪞 no self-care")
 
         st.info("✨ " + " | ".join(parts))
 
@@ -307,6 +243,4 @@ with tab1:
 with tab2:
 
     st.header("🎟️ Experiences Tracker")
-
-    st.info("🚧 Coming soon... exciting things are on the way!")
-    st.caption("✨ You'll soon be able to track and revisit your experiences here.")
+    st.info("🚧 Coming soon...")
